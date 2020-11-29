@@ -23,7 +23,7 @@ Edgewalker is similar, but [awesomer](https://xkcd.com/483/):
 
 You need:
 
-* A Let's Encrypt account and key (I'm working on setting this up automatically for you).
+* A Let's Encrypt account and key (I'm working on setting this up automatically for you, in the meantime you can use Step 1 on [this page](https://gethttpsforfree.com/) to do that for you).
 * An OpenBSD machine reachable from the Internet (it can be a physical machine you own, or a cloud VM like [Vultr](https://www.vultr.com/)).
 * The ability to add a DNS record for the machine's IP address (IPv4 only for now).
 
@@ -52,3 +52,10 @@ The script will ask you for:
 * To copy-paste your Let's Encrypt account key in PEM format.
 
 It will then obtain Let's Encrypt certificates, generate a QR code that you can use to download the profile on your iDevice to set up the VPN.
+
+## Credits
+
+* The OpenBSD team, for making their wonderful security-focused OS.
+* Reyk Flöter for making OpenIKEd, a breath of fresh air in the unnecessarily convoluted world of VPN software.
+* Let's Encrypt, for making certificates cheap and easy.
+* Daniel Roseler for the fantastic Acme-Tiny.
