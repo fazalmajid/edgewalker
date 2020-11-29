@@ -64,7 +64,7 @@ It will then obtain Let's Encrypt certificates, generate a QR code that you can 
 
 ## Demo
 
-I created a fresh OpenBSD 6.8 VM `vpn42.majid.org` on Vultr ([see how](vultr.m4v)), and here is what the experience looks like:
+I created a fresh OpenBSD 6.8 VM `vpn42.majid.org` on Vultr ([see how](https://vimeo.com/485215180)), and here is what the experience looks like:
 
 ![Sample run of Edgewalker](edgewalker.svg)
 
