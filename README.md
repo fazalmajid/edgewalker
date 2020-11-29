@@ -66,6 +66,6 @@ It will then obtain Let's Encrypt certificates, generate a QR code that you can 
 
 I created a fresh OpenBSD 6.8 VM `vpn42.majid.org` on Vultr ([see how](vultr.m4v)), and here is what the experience looks like:
 
-[![Sample run of Edgewalker](edgewalker.png)](https://asciinema.org/a/X5rNAhEbrIVr1IunoAiZNDOdL)
+![Sample run of Edgewalker](edgewalker.svg)
 
 This [Vimeo video](https://vimeo.com/485183891) shows how to use the generated QR code on an iPhone.
