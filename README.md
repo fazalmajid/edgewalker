@@ -19,6 +19,8 @@ Edgewalker is similar, but [awesomer](https://xkcd.com/483/):
 * It has no dependencies on Ansible or anything else exotic you need to add on your own machine, other than a SSH client.
 * It is just a shell script with little bits of Python thrown in like [Acme-Tiny](https://github.com/diafygi/acme-tiny), and easily auditable.
 
+While you can run the script again as your Let's Encrypt certificates expire (although it generates new credentials each time), I recommend simply destroying the VM and creating a new one. Of course, if you are running on physical hardware, you will want to rerun the script.
+
 ## Prerequisites
 
 You need:
@@ -59,3 +61,11 @@ It will then obtain Let's Encrypt certificates, generate a QR code that you can 
 * Reyk Flöter for making OpenIKEd, a breath of fresh air in the unnecessarily convoluted world of VPN software.
 * Let's Encrypt, for making certificates cheap and easy.
 * Daniel Roseler for the fantastic Acme-Tiny.
+
+## Demo
+
+I created a fresh OpenBSD 6.8 VM `vpn42.majid.org` on Vultr ([see how](vultr.m4v)), and here is what the experience looks like:
+
+[![Sample run of Edgewalker](edgewalker.png)](https://asciinema.org/a/X5rNAhEbrIVr1IunoAiZNDOdL)
+
+This [Vimeo video](https://vimeo.com/485183891) shows how to use the generated QR code on an iPhone.
