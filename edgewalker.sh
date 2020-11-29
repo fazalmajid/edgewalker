@@ -60,7 +60,7 @@ block return in on ! lo0 proto tcp to port 6000:6010
 block return out log proto {tcp udp} user _pbuild
 # IPsec, over IP or over UDP
 pass in quick on $main_if proto { ah esp } from any to $main_ip
-pass in quick proto udp to $main_ip port {500 4500 1701 1194}
+pass in quick proto udp to $main_ip port {500 1701 4500}
 pass out on $main_if inet from $ipsecnet to any nat-to $main_if
 # Wireguard
 pass in quick proto udp to $main_ip port 51820
@@ -309,16 +309,15 @@ rm lets-encrypt-x3-cross-signed.pem*
 wget -q https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
 cp lets-encrypt-x3-cross-signed.pem /etc/iked/ca/ca.crt
 
-if [ ! -f /etc/iked/acme-tiny/account.key ]; then
+if [ ! -f account.key ]; then
     printf '\033[1;32m%s\033[0m\n' "Enter Let's Encrypt account.key"
+    echo "If you do not have a Let's Encrypt account key yet, use Step 1 of"
+    echo "    https://gethttpsforfree.com/"
+    echo "to make one and register it."
+    echo ""
     echo "Copy and paste your account secret key below, then press Control-D"
-    echo "If you do not have a Let's Encrypt account, type 'NEW' then Ctrl-D"
-    cat > /etc/iked/acme-tiny/account.key
-    if [ `cat /etc/iked/acme-tiny/account.key` = NEW ]; then
-        printf '\033[1;31m%s\033[0m\n' "Account key generation not implemented"
-        exit 1
-        #openssl genrsa 4096 > account.key  
-    fi
+    echo "------------------------------------------------------------------"
+    cat > account.key
 fi
 
 cat > renew <<SOP
