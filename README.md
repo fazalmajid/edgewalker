@@ -5,7 +5,7 @@ An opinionated DIY VPN setup script based on OpenBSD, OpenIKEd, Wireguard and Le
 
 Most VPN services are [untrustworthy](https://mjtsai.com/blog/2019/07/16/most-free-vpn-apps-secretly-owned-by-china/). You depend on the VPN provider's assurances to protect your privacy, which completely defeats the purpose of a VPN. The only way you can be sure is to run your own, but baroque network protocols engendering complex software makes it difficult to do so even for the technically savvy.
 
-[Streisand](https://github.com/StreisandEffect/streisand) was one of the first efforts to automate the process, using cloud virtual servers as the hosts operating the VPN. Trail of Bits implemented [Algo](https://blog.trailofbits.com/2016/12/12/meet-algo-the-vpn-that-works/) to simplify if and remove some questionable choices Streisand made (although, to be fair, the Streisand project seems to have jettisoned many of them and converged on WireGuard).
+[Streisand](https://github.com/StreisandEffect/streisand) was one of the first efforts to automate the process, using cloud virtual servers as the hosts operating the VPN. Trail of Bits implemented [Algo](https://blog.trailofbits.com/2016/12/12/meet-algo-the-vpn-that-works/) to simplify it and remove some questionable choices Streisand made (although, to be fair, the Streisand project seems to have jettisoned many of them and converged on WireGuard).
 
 Edgewalker is similar, but [awesomer](https://xkcd.com/483/):
 
