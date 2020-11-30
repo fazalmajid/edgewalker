@@ -60,7 +60,7 @@ It will then obtain Let's Encrypt certificates, generate a QR code that you can 
 * The OpenBSD team, for making their wonderful security-focused OS.
 * Reyk Flöter for making OpenIKEd, a breath of fresh air in the unnecessarily convoluted world of VPN software.
 * Let's Encrypt, for making certificates cheap and easy.
-* Daniel Roseler for the fantastic Acme-Tiny.
+* Daniel Roesler for the fantastic Acme-Tiny.
 
 ## Demo
 
