@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 ########################################################################
 ########################################################################
 ########################################################################
@@ -28,10 +28,27 @@ read hostname
 #echo -n "What is the IKEv2 username? "
 #read USERNAME
 
+# these packages are not preinstalled on a vanilla OpenBSD 6.8 install
+if [ ! -f /usr/local/bin/wget ]; then
+    pkg_add wget
+fi
+if [ ! -f /usr/local/bin/python3 ]; then
+    pkg_add python3
+fi
+# this package is used to generate the Apple .mobileconfig and Wireguard
+# QR codes to make setting up your devices easier
+if [ ! -f /usr/local/bin/qrencode ]; then
+    pkg_add libqrencode
+fi
+
+# generate 16-character random keys
 secret=`python3 -c "import random,string;print(''.join(random.choice(string.ascii_letters+string.digits) for x in range(16)))"`
 secret2=`python3 -c "import random,string;print(''.join(random.choice(string.ascii_letters+string.digits) for x in range(16)))"`
+# generate random UUIDs for Apple VPN profile XML files
 uuid=`python3 -c "import uuid;print(str(uuid.uuid1()).upper())"`
 uuid2=`python3 -c "import uuid;print(str(uuid.uuid1()).upper())"`
+
+printf '\033[1;33m%s\033[0m\n' "Username: $USERNAME"
 printf '\033[1;33m%s\033[0m\n' "Secret: $secret"
 
 printf '\033[1;33m%s\033[0m\n' "setting up sysctl.conf"
@@ -47,10 +64,10 @@ EOF
 printf '\033[1;32m%s\033[0m\n' "Setting up PF"
 hcf=`ls -1 /etc/hostname.*|grep -v enc0|grep -v wg0|head -1`
 main_if=`echo $hcf|cut -d. -f 2`
-main_ip=`ifconfig $main_if|awk '/inet/{print $2}'`
+main_ip=`ifconfig $main_if|awk '/inet[^6]/{print $2}'`
 ipsecnet="172.17.0.0/16"
 wgnet="172.18.0.0/16"
-printf '\033[1;33m%s\033[0m\n' "Primary net interface $main_if $main_ip"
+printf '\033[1;33m%s\033[0m\n' "Primary net interface $main_if IPv4 $main_ip"
 cat > /etc/pf.conf <<EOF
 set skip on lo
 block return log
@@ -73,7 +90,7 @@ pass in quick on $main_if proto tcp from any to $main_ip port 443
 pass in log proto icmp
 EOF
 printf '\033[1;33m%s\033[0m\n' "Restarting PF"
-pfctl -f /etc/pf.conf
+pfctl -v -f /etc/pf.conf || (printf '\033[1;31m%s\033[0m\n' "PF failed"; cat /etc/pf.conf; false)
 
 ########################################################################
 # Set up Let's Encrypt
@@ -305,7 +322,8 @@ echo ""
 SOP
 chmod +x genkey
 
-rm lets-encrypt-x3-cross-signed.pem*
+# get the Let's Encrypt certificate chain
+rm lets-encrypt-x3-cross-signed.pem* > /dev/null 2>&1 || true
 wget -q https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
 cp lets-encrypt-x3-cross-signed.pem /etc/iked/ca/ca.crt
 
@@ -528,9 +546,6 @@ EOF
 /etc/rc.d/httpd start
 
 ########################################################################
-# this package is used to generate the Apple .mobileconfig and Wireguard
-# QR codes to make setting up your devices easier
-pkg_add libqrencode
 
 printf '\033[1;33m%s\033[0m\n' "iOS/iPadOS/macOS VPN config QR code"
 echo https://$hostname/$secret2/$hostname.mobileconfig

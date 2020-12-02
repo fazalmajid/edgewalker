@@ -42,8 +42,9 @@ If you have a firewall in front of the OpenBSD machine, it needs to allow the fo
 * Edit the first lines in the script edgewalker.sh (`X509` and `USERNAME`). Not strictly necessary, but make it your own.
 * Log in as root on your OpenBSD machine, then:
   ```
+   pkg_add wget
    wget -c https://raw.githubusercontent.com/YOUR_GITHUB_ACCOUNT_HERE/edgewalker/main/edgewalker.sh
-   sh edgewalker.sh
+   sh -e edgewalker.sh
    ```
 * The script will ask you for:
   * The DNS name of your OpenBSD machine.
