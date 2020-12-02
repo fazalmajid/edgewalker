@@ -379,8 +379,8 @@ cat > /etc/rc.conf.local <<EOF
 httpd_flags=-f /etc/iked/httpd.conf
 iked_flags=-v -v -v -v -f /etc/iked.conf
 EOF
-/etc/rc.d/httpd stop
-/etc/rc.d/httpd start
+rcctl stop httpd
+rcctl start httpd
 
 printf '\033[1;32m%s\033[0m\n' "Setting up OpenIKEd"
 echo up > /etc/hostname.enc0
@@ -412,8 +412,8 @@ printf '\033[1;33m%s\033[0m\n' "Renewing certificates"
 printf '\033[1;33m%s\033[0m\n' "Applying sysctl settings"
 xargs -n 1 sysctl < /etc/sysctl.conf
 printf '\033[1;33m%s\033[0m\n' "Starting OpenIKEd"
-/etc/rc.d/iked stop
-/etc/rc.d/iked start
+rcctl stop iked
+rcctl start iked
 
 ########################################################################
 mkdir -p /etc/iked/wwwroot/$secret2
@@ -542,12 +542,14 @@ server "$hostname" {
 	root "/"
 }
 EOF
-/etc/rc.d/httpd stop
-/etc/rc.d/httpd start
+rcctl stop httpd
+rcctl start httpd
 
 ########################################################################
 
 printf '\033[1;33m%s\033[0m\n' "iOS/iPadOS/macOS VPN config QR code"
-echo https://$hostname/$secret2/$hostname.mobileconfig
+# This QR encoding is small enough to fit in a standard 80x24 terminal window,
+# but doesn't work on older terminals like the OpenBSD console's vt220
 #qrencode -o - -t ANSI https://$hostname/$secret2/$hostname.mobileconfig
 qrencode -o - -t UTF8 https://$hostname/$secret2/$hostname.mobileconfig
+echo https://$hostname/$secret2/$hostname.mobileconfig
