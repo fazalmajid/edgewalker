@@ -14,7 +14,7 @@ X509="/C=UK/L=London/O=Fazal Majid/emailAddress=ssladministrator@majid.org"
 
 # user name for the VPN account. Feel free to leave it unchanged,
 # as it is mostly cosmetic
-USERNAME=majid
+USERNAME=edgewalker
 
 ########################################################################
 ########################################################################
