@@ -323,9 +323,9 @@ SOP
 chmod +x genkey
 
 # get the Let's Encrypt certificate chain
-rm lets-encrypt-x3-cross-signed.pem* > /dev/null 2>&1 || true
-wget -q https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem
-cp lets-encrypt-x3-cross-signed.pem /etc/iked/ca/ca.crt
+rm lets-encrypt-r3-cross-signed.pem* > /dev/null 2>&1 || true
+wget -q https://letsencrypt.org/certs/lets-encrypt-r3-cross-signed.pem
+cp lets-encrypt-r3-cross-signed.pem /etc/iked/ca/ca.crt
 
 if [ ! -f account.key ]; then
     printf '\033[1;32m%s\033[0m\n' "Enter Let's Encrypt account.key"
@@ -355,7 +355,7 @@ fi
 python3 acme_tiny.py --account-key ./account.key --csr ./vpn.csr \
         --disable-check --acme-dir `pwd`/challenges/ > vpn.crt || exit
 cp vpn.* /etc/iked/
-cat vpn.crt lets-encrypt-x3-cross-signed.pem > /etc/iked/vpn.crt
+cat vpn.crt lets-encrypt-r3-cross-signed.pem > /etc/iked/vpn.crt
 cp vpn.crt /etc/iked/certs/$hostname.crt
 touch renew.last
 /etc/rc.d/iked reload
