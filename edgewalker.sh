@@ -61,12 +61,44 @@ net.inet.esp.enable=1
 net.inet.esp.udpencap=1
 EOF
 
-printf '\033[1;32m%s\033[0m\n' "Setting up PF"
 hcf=`ls -1 /etc/hostname.*|grep -v enc0|grep -v wg0|head -1`
 main_if=`echo $hcf|cut -d. -f 2`
 main_ip=`ifconfig $main_if|awk '/inet[^6]/{print $2}'`
-ipsecnet="172.17.0.0/16"
+
+########################################################################
+printf '\033[1;33m%s\033[0m\n' "Setting up WireGuard"
 wgnet="172.18.0.0/16"
+wgclientip="172.18.0.2"
+wgclientnet="$wgclientip/16"
+# wireguard private key, see wg(4), hostname.if(5)
+wgkey=`openssl rand -base64 32`
+ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey
+wgpubkey=`ifconfig wg0|awk '/wgpubkey/{print $2}'`
+# client keys, must be distinct from the server's
+wgclientkey=`openssl rand -base64 32`
+ifconfig wg1 wgport 51821 wgkey $wgclientkey
+wgclientpubkey=`ifconfig wg1|awk '/wgpubkey/{print $2}'`
+ifconfig wg1 destroy
+
+ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey wgpeer $wgclientpubkey wgaip $wgclientip
+echo "ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey wgpeer $wgclientpubkey wgaip $wgclientip" > /etc/hostname.wg0
+mkdir -p /etc/iked/wwwroot/$secret2
+cat > /etc/iked/wwwroot/$secret2/wgclient.conf <<EOF
+[Interface]
+PrivateKey = $wgclientkey
+Address = $wgclientnet
+DNS = 1.1.1.1
+
+[Peer]
+PublicKey = $wgpubkey
+AllowedIPs = 0.0.0.0/0
+Endpoint = $hostname:51820
+PersistentKeepalive = 300
+EOF
+
+########################################################################
+printf '\033[1;32m%s\033[0m\n' "Setting up PF"
+ipsecnet="172.17.0.0/16"
 printf '\033[1;33m%s\033[0m\n' "Primary net interface $main_if IPv4 $main_ip"
 cat > /etc/pf.conf <<EOF
 set skip on lo
@@ -416,7 +448,6 @@ rcctl stop iked
 rcctl start iked
 
 ########################################################################
-mkdir -p /etc/iked/wwwroot/$secret2
 # Apple Configurator 2 format for iDevices VPN. It will appear as "unsigned"
 # in System Preferences, sadly
 cat > /etc/iked/wwwroot/$secret2/$hostname.mobileconfig <<EOF
@@ -553,3 +584,9 @@ printf '\033[1;33m%s\033[0m\n' "iOS/iPadOS/macOS VPN config QR code"
 #qrencode -o - -t ANSI https://$hostname/$secret2/$hostname.mobileconfig
 qrencode -o - -t UTF8 https://$hostname/$secret2/$hostname.mobileconfig
 echo https://$hostname/$secret2/$hostname.mobileconfig
+
+echo ""
+echo ""
+
+printf '\033[1;33m%s\033[0m\n' "WireGuard VPN config QR code"
+qrencode -o - -t UTF8 < /etc/iked/wwwroot/$secret2/wgclient.conf
