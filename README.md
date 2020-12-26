@@ -101,6 +101,7 @@ NAT):
 * The OpenBSD team, for making their wonderful security-focused OS.
 * Reyk Flöter for making OpenIKEd, a breath of fresh air in the unnecessarily
   convoluted world of VPN software.
+* Jason A. Donenfeld for inventing WireGuard.
 * Let's Encrypt, for making certificates cheap and easy.
 * Daniel Roesler for the fantastic Acme-Tiny.
 
