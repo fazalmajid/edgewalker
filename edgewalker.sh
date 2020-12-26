@@ -16,6 +16,11 @@ X509="/C=UK/L=London/O=Fazal Majid/emailAddress=ssladministrator@majid.org"
 # as it is mostly cosmetic
 USERNAME=edgewalker
 
+# each WireGuard client needs its own distinct key, so we pre-create N
+# configs, adjust this for how many clients you expect to provision
+# the number needs to be less than 254
+WG_CLIENTS=32
+
 ########################################################################
 ########################################################################
 ########################################################################
@@ -68,22 +73,25 @@ main_ip=`ifconfig $main_if|awk '/inet[^6]/{print $2}'`
 ########################################################################
 printf '\033[1;33m%s\033[0m\n' "Setting up WireGuard"
 wgnet="172.18.0.0/16"
-wgclientip="172.18.0.2"
-wgclientnet="$wgclientip/16"
 # wireguard private key, see wg(4), hostname.if(5)
 wgkey=`openssl rand -base64 32`
 ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey
+echo "$wgnet wgport 51820 wgkey $wgkey" > /etc/hostname.wg0
 wgpubkey=`ifconfig wg0|awk '/wgpubkey/{print $2}'`
-# client keys, must be distinct from the server's
-wgclientkey=`openssl rand -base64 32`
-ifconfig wg1 wgport 51821 wgkey $wgclientkey
-wgclientpubkey=`ifconfig wg1|awk '/wgpubkey/{print $2}'`
-ifconfig wg1 destroy
-
-ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey wgpeer $wgclientpubkey wgaip $wgclientip
-echo "ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey wgpeer $wgclientpubkey wgaip $wgclientip" > /etc/hostname.wg0
 mkdir -p /etc/iked/wwwroot/$secret2
-cat > /etc/iked/wwwroot/$secret2/wgclient.conf <<EOF
+# client keys, must be distinct from the server's and one another
+i=0
+while [ ! $i = $WG_CLIENTS ]; do
+    i=`expr $i + 1`
+    wgclientip="172.18.0."`expr $i + 1`
+    wgclientnet="$wgclientip/16"
+    wgclientkey=`openssl rand -base64 32`
+    ifconfig wg1 wgport 51821 wgkey $wgclientkey
+    wgclientpubkey=`ifconfig wg1|awk '/wgpubkey/{print $2}'`
+    ifconfig wg1 destroy
+    #ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey wgpeer $wgclientpubkey wgaip $wgclientip
+    echo "wgpeer $wgclientpubkey wgaip $wgclientip" >> /etc/hostname.wg0
+    cat > /etc/iked/wwwroot/$secret2/wgclient$i.conf <<EOF
 [Interface]
 PrivateKey = $wgclientkey
 Address = $wgclientnet
@@ -95,7 +103,9 @@ AllowedIPs = 0.0.0.0/0
 Endpoint = $hostname:51820
 PersistentKeepalive = 300
 EOF
-
+    qrencode -o /etc/iked/wwwroot/$secret2/wgclient$i.png -t PNG < /etc/iked/wwwroot/$secret2/wgclient$i.conf
+done
+    
 ########################################################################
 printf '\033[1;32m%s\033[0m\n' "Setting up PF"
 ipsecnet="172.17.0.0/16"
@@ -121,6 +131,8 @@ pass in quick on $main_if proto tcp from any to $main_ip port 80
 pass in quick on $main_if proto tcp from any to $main_ip port 443
 pass in log proto icmp
 EOF
+printf '\033[1;33m%s\033[0m\n' "Restarting network interfaces"
+sh /etc/netstart
 printf '\033[1;33m%s\033[0m\n' "Restarting PF"
 pfctl -v -f /etc/pf.conf || (printf '\033[1;31m%s\033[0m\n' "PF failed"; cat /etc/pf.conf; false)
 
@@ -554,6 +566,37 @@ printf '\033[1;33m%s\033[0m\n' "Enabling SSL on HTTPd"
 
 echo "<h1>$hostname</h1>" > /etc/iked/wwwroot/index.html
 
+qrencode -o /etc/iked/wwwroot/$secret2/$hostname.apple.png -t PNG https://$hostname/$secret2/$hostname.mobileconfig
+
+cat > /etc/iked/wwwroot/$secret2/index.html <<EOF
+<!DOCTYPE html>
+<html>
+<head>
+<title>$hostname VPN config</title>
+</head>
+<body>
+<h1>$hostname VPN config</h1>
+<h2>Apple devices (iOS, iPadOS, macOS)</h2>
+
+<a href="$hostname.mobileconfig">$hostname.mobileconfig</a>
+<a href="$hostname.apple.png">(QR code)</a>
+
+<h2>WireGuard</h2>
+
+Each device needs its own key.
+<ol>
+EOF
+i=0
+while [ ! $i = $WG_CLIENTS ]; do
+    i=`expr $i + 1`
+    echo "<li><a href=\"wgclient$i.conf\">wgclient$i.conf</a> <a href=\"wgclient$i.png\">(QR code)</a>" >> /etc/iked/wwwroot/$secret2/index.html
+done
+cat >> /etc/iked/wwwroot/$secret2/index.html <<EOF
+</ol>
+</body>
+</html>
+EOF
+
 cat > /etc/iked/httpd.conf <<EOF
 chroot "/etc/iked/wwwroot"
 logdir "/var/log/httpd"
@@ -578,15 +621,9 @@ rcctl start httpd
 
 ########################################################################
 
-printf '\033[1;33m%s\033[0m\n' "iOS/iPadOS/macOS VPN config QR code"
+printf '\033[1;33m%s\033[0m\n' "VPN config page QR code"
 # This QR encoding is small enough to fit in a standard 80x24 terminal window,
 # but doesn't work on older terminals like the OpenBSD console's vt220
 #qrencode -o - -t ANSI https://$hostname/$secret2/$hostname.mobileconfig
-qrencode -o - -t UTF8 https://$hostname/$secret2/$hostname.mobileconfig
-echo https://$hostname/$secret2/$hostname.mobileconfig
-
-echo ""
-echo ""
-
-printf '\033[1;33m%s\033[0m\n' "WireGuard VPN config QR code"
-qrencode -o - -t UTF8 < /etc/iked/wwwroot/$secret2/wgclient.conf
+qrencode -o - -t UTF8 https://$hostname/$secret2/
+echo https://$hostname/$secret2/
