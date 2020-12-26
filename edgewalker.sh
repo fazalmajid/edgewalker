@@ -25,7 +25,7 @@ WG_CLIENTS=32
 ########################################################################
 ########################################################################
 # NO USER-SERVICEABLE PARTS BELOW
-PATH=${PATH}:/usr/local/bin
+PATH=${PATH}:/usr/local/bin:/usr/sbin
 export PATH
 
 echo -n "What is the FQDN hostname to use? "
@@ -71,6 +71,59 @@ main_if=`echo $hcf|cut -d. -f 2`
 main_ip=`ifconfig $main_if|awk '/inet[^6]/{print $2}'`
 
 ########################################################################
+printf '\033[1;33m%s\033[0m\n' "Setting up Unbound DNS server"
+mkdir -p /etc/unbound
+chown nobody:nobody /etc/unbound
+(cd /etc/unbound; rm -f named.cache > /dev/null 2>&1; wget -c ftp://ftp.internic.net/domain/named.cache)
+(cd /etc/unbound; rm -f root.key > /dev/null 2>&1; unbound-anchor -a /etc/unbound/root.key)
+cat > /etc/unbound/unbound.conf <<EOF
+server:
+	verbosity: 1
+	log-queries: no
+	num-threads: 4
+	num-queries-per-thread: 1024
+	interface: ::1
+	interface: 127.0.0.1
+	interface: $main_ip
+	port: 53
+	outgoing-interface: $main_ip
+	outgoing-range: 64
+	chroot: ""
+	auto-trust-anchor-file: "/etc/unbound/root.key"
+	
+	# Enable TCP, "yes" or "no".
+	# do-tcp: yes
+
+	# Detach from the terminal, run in background, "yes" or "no".
+	do-daemonize: yes
+
+	# control which clients are allowed to make (recursive) queries
+	# to this server. Specify classless netblocks with /size and action.
+	# By default everything is refused, except for localhost.
+	# Choose deny (drop message), refuse (polite error reply), allow.
+	access-control: 0.0.0.0/0 refuse
+	access-control: 127.0.0.0/8 allow
+	access-control: 10.0.0.0/8 allow
+	access-control: 172.16.0.0/12 allow
+	access-control: ::0/0 refuse
+	access-control: ::1 allow
+
+	username: "nobody"
+	directory: "/etc/unbound"
+	logfile: "/etc/unbound/unbound.log"
+	use-syslog: no
+	pidfile: "/etc/unbound/unbound.pid"
+EOF
+cat > /etc/rc.conf.local <<EOF
+unbound_flags=-c /etc/unbound/unbound.conf
+httpd_flags=-f /etc/iked/httpd.conf
+iked_flags=-v -v -v -v -f /etc/iked.conf
+EOF
+rcctl stop unbound
+rcctl start unbound
+echo nameserver 127.0.0.1 > /etc/resolv.conf
+
+########################################################################
 printf '\033[1;33m%s\033[0m\n' "Setting up WireGuard"
 wgnet="172.18.0.0/16"
 # wireguard private key, see wg(4), hostname.if(5)
@@ -95,7 +148,7 @@ while [ ! $i = $WG_CLIENTS ]; do
 [Interface]
 PrivateKey = $wgclientkey
 Address = $wgclientnet
-DNS = 1.1.1.1
+DNS = $main_ip
 
 [Peer]
 PublicKey = $wgpubkey
@@ -419,10 +472,6 @@ server "default" {
         }
 }
 EOF
-cat > /etc/rc.conf.local <<EOF
-httpd_flags=-f /etc/iked/httpd.conf
-iked_flags=-v -v -v -v -f /etc/iked.conf
-EOF
 rcctl stop httpd
 rcctl start httpd
 
@@ -438,7 +487,7 @@ ikev2 VPN passive ipcomp esp \
         srcid $hostname \
         psk "$secret" \
         config address $ipsecnet \
-        config name-server 1.1.1.1 \
+        config name-server $main_ip \
         config protected-subnet 0.0.0.0/0 \
         tag "IKED" tap enc0
 
