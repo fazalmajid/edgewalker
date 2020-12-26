@@ -77,6 +77,7 @@ NAT):
 * Optionally IPsec protocols `ESP` (IP protocol number `50`, hex `0x32`)) and
   `AH` (decimal `51` hex `0x33`) and ESP for maximum efficiency, although many
   firewalls won't support this.
+* UDP port `51820` (WireGuard).
 
 ## Instructions
 
