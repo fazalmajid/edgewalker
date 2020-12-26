@@ -1,6 +1,8 @@
 # edgewalker
-An opinionated DIY VPN setup script based on OpenBSD, OpenIKEd, Wireguard and
-Let's Encrypt
+An opinionated DIY VPN setup script based on
+[OpenBSD](https://www.openbsd.org/"), [OpenIKED](https://www.openiked.org),
+[Wireguard](https://www.wireguard.com) and
+[Let's Encrypt](https://letsencrypt.org).
 
 ## Rationale
 
@@ -99,7 +101,7 @@ NAT):
 ## Credits
 
 * The OpenBSD team, for making their wonderful security-focused OS.
-* Reyk Flöter for making OpenIKEd, a breath of fresh air in the unnecessarily
+* Reyk Flöter for making OpenIKED, a breath of fresh air in the unnecessarily
   convoluted world of VPN software.
 * Jason A. Donenfeld for inventing WireGuard.
 * Let's Encrypt, for making certificates cheap and easy.
