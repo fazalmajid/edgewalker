@@ -29,21 +29,26 @@ Edgewalker is similar, but [awesomer](https://xkcd.com/483/):
   * IPsec/IKEv2 works out of the box on iOS, iPadOS and macOS.
   * In theory on Windows as well, although I have no idea how to make it work
     or simplify setup, any help is welcome.
-  * For Linux and Android I'd recommend waiting until I have Wireguard support
-    implemented.
+* It also implements WireGuard (recommended for Linux and Android), along with
+  travel VPN-capable routers like the
+  [GL.iNet Mango](https://www.gl-inet.com/products/gl-mt300n-v2/)
 * It uses QR codes to simplify installation as much as possible on the client
   devices.
 * It uses [Let's Encrypt](https://letsencrypt.org/) so your IPsec certificates
-  just work.
-* It has no dependencies on Ansible or anything else exotic you need to add on
-  your own machine, other than a SSH client.
+  just work (WireGuard does not rely on PKI).
+* It uses its own [Unbound](https://nlnetlabs.nl/projects/unbound/about/) DNS
+  server with DNSSEC validation support, for better privacy
+* It has no dependencies on Ansible, Python or anything else exotic you need
+  to add on your own machine, other than a SSH client.
 * It is just a shell script with little bits of Python thrown in like
   [Acme-Tiny](https://github.com/diafygi/acme-tiny), and easily auditable.
 
 While you can run the script again as your Let's Encrypt certificates expire
 (although it generates new credentials each time), I recommend simply
 destroying the VM and creating a new one. Of course, if you are running on
-physical hardware, you will want to rerun the script.
+physical hardware, you will want to rerun the script. If using WireGuard only,
+you don't need to rerun the script as WireGuard keys do not expire and there
+are no certificates.
 
 ## Prerequisites
 
