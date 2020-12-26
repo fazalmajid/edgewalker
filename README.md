@@ -1,6 +1,6 @@
 # edgewalker
 An opinionated DIY VPN setup script based on
-[OpenBSD](https://www.openbsd.org/"), [OpenIKED](https://www.openiked.org),
+[OpenBSD](https://www.openbsd.org/), [OpenIKED](https://www.openiked.org),
 [Wireguard](https://www.wireguard.com) and
 [Let's Encrypt](https://letsencrypt.org).
 
