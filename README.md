@@ -31,9 +31,9 @@ Edgewalker is similar, but [awesomer](https://xkcd.com/483/):
   * IPsec/IKEv2 works out of the box on iOS, iPadOS and macOS.
   * In theory on Windows as well, although I have no idea how to make it work
     or simplify setup, any help is welcome.
-* It also implements WireGuard (recommended for Linux and Android), along with
+* It also implements WireGuard (recommended for Linux and Android, along with
   travel VPN-capable routers like the
-  [GL.iNet Mango](https://www.gl-inet.com/products/gl-mt300n-v2/)
+  [GL.iNet Mango](https://www.gl-inet.com/products/gl-mt300n-v2/))
 * It uses QR codes to simplify installation as much as possible on the client
   devices.
 * It uses [Let's Encrypt](https://letsencrypt.org/) so your IPsec certificates
