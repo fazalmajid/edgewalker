@@ -165,6 +165,7 @@ ipsecnet="172.17.0.0/16"
 printf '\033[1;33m%s\033[0m\n' "Primary net interface $main_if IPv4 $main_ip"
 cat > /etc/pf.conf <<EOF
 set skip on lo
+match in all scrub (no-df)
 block return log
 pass
 block in log on $main_if
