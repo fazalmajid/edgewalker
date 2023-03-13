@@ -46,11 +46,12 @@ Edgewalker is similar, but [awesomer](https://xkcd.com/483/):
   [Acme-Tiny](https://github.com/diafygi/acme-tiny), and easily auditable.
 
 While you can run the script again as your Let's Encrypt certificates expire
-(although it generates new credentials each time), I recommend simply
-destroying the VM and creating a new one. Of course, if you are running on
-physical hardware, you will want to rerun the script. If using WireGuard only,
-you don't need to rerun the script as WireGuard keys do not expire and there
-are no certificates.
+(although it generates new credentials each time), or run
+`/etc/iked/acme-tiny/renew` to renew the certificate only without regenerating
+new WG keys, I recommend simply destroying the VM and creating a new one. Of
+course, if you are running on physical hardware, you will want to rerun the
+script. If using WireGuard only, you don't need to rerun the script as
+WireGuard keys do not expire and there are no certificates.
 
 ## Prerequisites
 

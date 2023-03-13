@@ -2,13 +2,13 @@
 ########################################################################
 ########################################################################
 ########################################################################
-# CHANGE THESE SETTINGS TO SUITE YOUR NEEDS
+# CHANGE THESE SETTINGS TO SUIT YOUR NEEDS
 ########################################################################
 ########################################################################
 ########################################################################
 
 # Contact info that will be embedded in the Let's Encrypt Certificates
-# used to secure the VPN. Be aware spammers may harvest the email
+# used to secure the IPsec VPN. Be aware spammers may harvest the email
 # ITU X.509 format, C=country L=location O=organization
 X509="/C=UK/L=London/O=Fazal Majid/emailAddress=ssladministrator@majid.org"
 
@@ -74,8 +74,14 @@ main_ip=`ifconfig $main_if|awk '/inet[^6]/{print $2}'`
 printf '\033[1;33m%s\033[0m\n' "Setting up Unbound DNS server"
 mkdir -p /etc/unbound
 chown nobody:nobody /etc/unbound
-(cd /etc/unbound; rm -f named.cache > /dev/null 2>&1; wget -c ftp://ftp.internic.net/domain/named.cache)
-(cd /etc/unbound; rm -f root.key > /dev/null 2>&1; unbound-anchor -a /etc/unbound/root.key)
+(cd /etc/unbound; rm -f named.cache > /dev/null 2>&1 || true)
+echo fetching root nameservers
+(cd /etc/unbound; wget -c ftp://ftp.internic.net/domain/named.cache)
+echo fetching clearing old root key
+(cd /etc/unbound; rm -f root.key > /dev/null 2>&1 || true)
+echo fetching root key
+(cd /etc/unbound; unbound-anchor -v -a /etc/unbound/root.key || echo DNSSEC root key updated)
+echo generating unbound.conf
 cat > /etc/unbound/unbound.conf <<EOF
 server:
 	verbosity: 1
@@ -132,6 +138,8 @@ ifconfig wg0 $wgnet wgport 51820 wgkey $wgkey
 echo "$wgnet wgport 51820 wgkey $wgkey" > /etc/hostname.wg0
 wgpubkey=`ifconfig wg0|awk '/wgpubkey/{print $2}'`
 mkdir -p /etc/iked/wwwroot/$secret2
+mkdir -p /etc/iked/wwwroot/acme-challenge
+
 # client keys, must be distinct from the server's and one another
 i=0
 while [ ! $i = $WG_CLIENTS ]; do
@@ -192,7 +200,8 @@ pfctl -v -f /etc/pf.conf || (printf '\033[1;31m%s\033[0m\n' "PF failed"; cat /et
 
 ########################################################################
 # Set up Let's Encrypt
-mkdir -p /etc/iked/acme-tiny/challenges
+mkdir -p /etc/iked/acme-tiny
+ln -sf /etc/iked/wwwroot/acme-challenge /etc/iked/acme-tiny/challenges
 cd /etc/iked/acme-tiny
 
 # wget -q https://raw.githubusercontent.com/diafygi/acme-tiny/master/acme_tiny.py
@@ -456,7 +465,8 @@ cp vpn.* /etc/iked/
 cat vpn.crt lets-encrypt-r3-cross-signed.pem > /etc/iked/vpn.crt
 cp vpn.crt /etc/iked/certs/$hostname.crt
 touch renew.last
-/etc/rc.d/iked reload
+rcctl restart iked
+rcctl restart httpd
 SOP
 chmod +x renew
 
@@ -506,7 +516,7 @@ printf '\033[1;33m%s\033[0m\n' "Renewing certificates"
 printf '\033[1;33m%s\033[0m\n' "Applying sysctl settings"
 xargs -n 1 sysctl < /etc/sysctl.conf
 printf '\033[1;33m%s\033[0m\n' "Starting OpenIKEd"
-rcctl stop iked
+rcctl stop iked || true
 rcctl start iked
 
 ########################################################################
@@ -653,6 +663,9 @@ logdir "/var/log/httpd"
 server "$hostname" {
 	listen on * port 80
 	root "/"
+        location "/.well-known/acme-challenge/*" {
+                 request strip 1
+        }
 	location * {
 		block return 302 "https://\$HTTP_HOST\$REQUEST_URI"
 	}
